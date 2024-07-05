@@ -22,6 +22,8 @@ import {
 import { keyframes } from '@emotion/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const gradientMove = keyframes`
   0% {
@@ -108,6 +110,16 @@ const SummaryAI = ({ sampleData }) => {
     }, 2000);
   };
 
+  const handleDownloadPdf = () => {
+    const input = document.getElementById('response-data');
+    html2canvas(input).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      pdf.addImage(imgData, 'PNG', 0, 0);
+      pdf.save('response.pdf');
+    });
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -179,54 +191,66 @@ const SummaryAI = ({ sampleData }) => {
 
         {responseData && (
           <>
-            <AnimatedBox delay={0.3}>
-              <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Most Important Questions
-              </Typography>
-              {responseData.importantQuestions.map((q, index) => (
-                <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{q.question}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography>{q.answer}</Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-            </AnimatedBox>
-
-            <AnimatedBox delay={0.4}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Summary
+            <div id="response-data">
+              <AnimatedBox delay={0.3}>
+                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                  Most Important Questions
                 </Typography>
-                <Typography>{responseData.summary}</Typography>
-              </Paper>
-            </AnimatedBox>
+                {responseData.importantQuestions.map((q, index) => (
+                  <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>{q.question}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography>{q.answer}</Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+              </AnimatedBox>
 
-            <AnimatedBox delay={0.5}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Notes
-                </Typography>
-                <List>
-                  {responseData.notes.map((note, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={note} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </AnimatedBox>
+              <AnimatedBox delay={0.4}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Summary
+                  </Typography>
+                  <Typography>{responseData.summary}</Typography>
+                </Paper>
+              </AnimatedBox>
 
-            <AnimatedBox delay={0.6}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Additional Info
-                </Typography>
-                <Typography>{responseData.additionalInfo}</Typography>
-              </Paper>
-            </AnimatedBox>
+              <AnimatedBox delay={0.5}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Notes
+                  </Typography>
+                  <List>
+                    {responseData.notes.map((note, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={note} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              </AnimatedBox>
+
+              <AnimatedBox delay={0.6}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Additional Info
+                  </Typography>
+                  <Typography>{responseData.additionalInfo}</Typography>
+                </Paper>
+              </AnimatedBox>
+            </div>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Button 
+                variant="contained" 
+                color="secondary" 
+                onClick={handleDownloadPdf}
+              >
+                Download as PDF
+              </Button>
+            </Box>
           </>
         )}
       </Box>
