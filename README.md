@@ -1,1 +1,1 @@
-# summarizer-ai-frontend
+Summary AI
