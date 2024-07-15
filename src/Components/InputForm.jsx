@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { 
-  ThemeProvider, 
-  createTheme, 
+import axios from 'axios';
+import {
+  ThemeProvider,
+  createTheme,
   CssBaseline,
-  Box, 
-  Typography, 
-  TextField, 
-  Checkbox, 
-  FormControlLabel, 
-  Accordion, 
-  AccordionSummary, 
+  Box,
+  Typography,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Accordion,
+  AccordionSummary,
   AccordionDetails,
   List,
   ListItem,
@@ -22,21 +23,8 @@ import {
 import { keyframes } from '@emotion/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
-const gradientMove = keyframes`
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-`;
-
+// Define keyframes
 const fadeInUp = keyframes`
   from {
     opacity: 0;
@@ -48,6 +36,7 @@ const fadeInUp = keyframes`
   }
 `;
 
+// Define theme
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -68,7 +57,17 @@ const darkTheme = createTheme({
         root: {
           backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 75%, transparent 75%, transparent)',
           backgroundSize: '400% 400%',
-          animation: `${gradientMove} 3s ease infinite`,
+          animation: `${keyframes`
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          `} 3s ease infinite`,
           boxShadow: '0 4px 20px 0 rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
@@ -90,10 +89,16 @@ const AnimatedBox = ({ children, delay }) => (
   </Box>
 );
 
-const SummaryAI = ({ sampleData }) => {
+AnimatedBox.propTypes = {
+  children: PropTypes.node.isRequired,
+  delay: PropTypes.number.isRequired,
+};
+
+const SummaryAI = () => {
   const [file, setFile] = useState(null);
-  const [link, setLink] = useState('');
-  const [prompt, setPrompt] = useState('');
+  const [websiteLink, setWebsiteLink] = useState('');
+  const [promptText, setPromptText] = useState('');
+  const [checkboxes, setCheckboxes] = useState([false, false, false, false]);
   const [responseData, setResponseData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -102,22 +107,34 @@ const SummaryAI = ({ sampleData }) => {
     setFile(uploadedFile);
   };
 
-  const handleSubmit = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setResponseData(sampleData);
-      setLoading(false);
-    }, 2000);
+  const handleCheckboxChange = (index) => {
+    const newCheckboxes = [...checkboxes];
+    newCheckboxes[index] = !newCheckboxes[index];
+    setCheckboxes(newCheckboxes);
   };
 
-  const handleDownloadPdf = () => {
-    const input = document.getElementById('response-data');
-    html2canvas(input).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF();
-      pdf.addImage(imgData, 'PNG', 0, 0);
-      pdf.save('response.pdf');
-    });
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      if (file) {
+        formData.append('file', file);
+      }
+      formData.append('website_link', websiteLink);
+      formData.append('prompt_text', promptText);
+      formData.append('checkboxes', checkboxes.map(cb => cb ? '1' : '0').join(','));
+  
+      const response = await axios.post('http://localhost:8000/submit', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setResponseData(response.data);
+    } catch (error) {
+      console.error('Error submitting data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -156,25 +173,37 @@ const SummaryAI = ({ sampleData }) => {
               variant="outlined" 
               placeholder="Or enter website link"
               sx={{ mb: 2 }}
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
+              value={websiteLink}
+              onChange={(e) => setWebsiteLink(e.target.value)}
             />
             <TextField 
               fullWidth 
               variant="outlined" 
               placeholder="Enter one-line prompt (specific topic)"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
             />
           </Paper>
         </AnimatedBox>
 
         <AnimatedBox delay={0.2}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <FormControlLabel control={<Checkbox />} label="Most Important Q" />
-            <FormControlLabel control={<Checkbox />} label="Summary" />
-            <FormControlLabel control={<Checkbox />} label="Notes" />
-            <FormControlLabel control={<Checkbox />} label="Additional Info" />
+            <FormControlLabel 
+              control={<Checkbox checked={checkboxes[0]} onChange={() => handleCheckboxChange(0)} />} 
+              label="Most Important Q" 
+            />
+            <FormControlLabel 
+              control={<Checkbox checked={checkboxes[1]} onChange={() => handleCheckboxChange(1)} />} 
+              label="Summary" 
+            />
+            <FormControlLabel 
+              control={<Checkbox checked={checkboxes[2]} onChange={() => handleCheckboxChange(2)} />} 
+              label="Notes" 
+            />
+            <FormControlLabel 
+              control={<Checkbox checked={checkboxes[3]} onChange={() => handleCheckboxChange(3)} />} 
+              label="Additional Info" 
+            />
           </Paper>
         </AnimatedBox>
 
@@ -191,85 +220,59 @@ const SummaryAI = ({ sampleData }) => {
 
         {responseData && (
           <>
-            <div id="response-data">
-              <AnimatedBox delay={0.3}>
-                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                  Most Important Questions
+            <AnimatedBox delay={0.3}>
+              <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                Most Important Questions
+              </Typography>
+              {responseData.important_questions.map((q, index) => (
+                <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography>{q.question}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography>{q.answer}</Typography>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </AnimatedBox>
+
+            <AnimatedBox delay={0.4}>
+              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                <Typography variant="h5" gutterBottom>
+                  Summary
                 </Typography>
-                {responseData.importantQuestions.map((q, index) => (
-                  <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>{q.question}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Typography>{q.answer}</Typography>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </AnimatedBox>
+                <Typography>{responseData.summary}</Typography>
+              </Paper>
+            </AnimatedBox>
 
-              <AnimatedBox delay={0.4}>
-                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                  <Typography variant="h5" gutterBottom>
-                    Summary
-                  </Typography>
-                  <Typography>{responseData.summary}</Typography>
-                </Paper>
-              </AnimatedBox>
+            <AnimatedBox delay={0.5}>
+              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                <Typography variant="h5" gutterBottom>
+                  Notes
+                </Typography>
+                <List>
+                  {responseData.notes.map((note, index) => (
+                    <ListItem key={index}>
+                      <ListItemText primary={note} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            </AnimatedBox>
 
-              <AnimatedBox delay={0.5}>
-                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                  <Typography variant="h5" gutterBottom>
-                    Notes
-                  </Typography>
-                  <List>
-                    {responseData.notes.map((note, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={note} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
-              </AnimatedBox>
-
-              <AnimatedBox delay={0.6}>
-                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                  <Typography variant="h5" gutterBottom>
-                    Additional Info
-                  </Typography>
-                  <Typography>{responseData.additionalInfo}</Typography>
-                </Paper>
-              </AnimatedBox>
-            </div>
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-              <Button 
-                variant="contained" 
-                color="secondary" 
-                onClick={handleDownloadPdf}
-              >
-                Download as PDF
-              </Button>
-            </Box>
+            <AnimatedBox delay={0.6}>
+              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                <Typography variant="h5" gutterBottom>
+                  Additional Info
+                </Typography>
+                <Typography>{responseData.additional_info}</Typography>
+              </Paper>
+            </AnimatedBox>
           </>
         )}
       </Box>
     </ThemeProvider>
   );
-};
-
-SummaryAI.propTypes = {
-  sampleData: PropTypes.shape({
-    importantQuestions: PropTypes.arrayOf(
-      PropTypes.shape({
-        question: PropTypes.string.isRequired,
-        answer: PropTypes.string.isRequired,
-      })
-    ).isRequired,
-    summary: PropTypes.string.isRequired,
-    notes: PropTypes.arrayOf(PropTypes.string).isRequired,
-    additionalInfo: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default SummaryAI;
