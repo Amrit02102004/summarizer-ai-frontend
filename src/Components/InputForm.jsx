@@ -116,6 +116,8 @@ const SummaryAI = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      
+      setResponseData(null);
       const formData = new FormData();
       if (file) {
         formData.append('file', file);
