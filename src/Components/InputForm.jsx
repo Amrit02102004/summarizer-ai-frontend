@@ -1,6 +1,5 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import {
@@ -33,6 +32,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -42,10 +42,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// Animation keyframes
 const fadeInUp = keyframes`
   from {
     opacity: 0;
@@ -57,6 +59,7 @@ const fadeInUp = keyframes`
   }
 `;
 
+// Dark theme configuration
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -99,6 +102,7 @@ const darkTheme = createTheme({
   },
 });
 
+// Animated box component
 const AnimatedBox = ({ children, delay }) => (
   <Box sx={{
     animation: `${fadeInUp} 0.5s ease-out forwards`,
@@ -114,6 +118,7 @@ AnimatedBox.propTypes = {
   delay: PropTypes.number.isRequired,
 };
 
+// Main component
 const SummaryAI = () => {
   const [file, setFile] = useState(null);
   const [websiteLink, setWebsiteLink] = useState('');
@@ -122,6 +127,7 @@ const SummaryAI = () => {
   const [responseData, setResponseData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -143,6 +149,7 @@ const SummaryAI = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       setResponseData(null);
       const formData = new FormData();
@@ -152,15 +159,21 @@ const SummaryAI = () => {
       formData.append('website_link', websiteLink);
       formData.append('prompt_text', promptText);
       formData.append('checkboxes', checkboxes.map(cb => cb ? '1' : '0').join(','));
-  
-      const response = await axios.post('http://localhost:8000/submit', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+
+      const response = await fetch('http://127.0.0.1:8000/api/submit', {
+        method: 'POST',
+        body: formData,
       });
-      setResponseData(response.data);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResponseData(data);
     } catch (error) {
       console.error('Error submitting data:', error);
+      setError('Failed to submit data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,11 +183,32 @@ const SummaryAI = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      // Send request to backend to verify login
-      await axios.post('http://localhost:8000/login', {
-        uid: user.uid,
-        email: user.email
+
+      const idToken = await user.getIdToken();
+      console.log(idToken);
+
+      const response = await fetch('http://127.0.0.1:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id_token: idToken }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      auth.onIdTokenChanged(async (user) => {
+        if (user) {
+          const newToken = await user.getIdToken();
+          console.log("Token refreshed:", newToken);
+        }
+      });
+
     } catch (error) {
       console.error('Error signing in:', error);
     }
@@ -251,17 +285,17 @@ const SummaryAI = () => {
                 </Typography>
               )}
             </Box>
-            <TextField 
-              fullWidth 
-              variant="outlined" 
+            <TextField
+              fullWidth
+              variant="outlined"
               placeholder="Or enter website link"
               sx={{ mb: 2 }}
               value={websiteLink}
               onChange={(e) => setWebsiteLink(e.target.value)}
             />
-            <TextField 
-              fullWidth 
-              variant="outlined" 
+            <TextField
+              fullWidth
+              variant="outlined"
               placeholder="Enter one-line prompt (specific topic)"
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
@@ -271,35 +305,41 @@ const SummaryAI = () => {
 
         <AnimatedBox delay={0.2}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <FormControlLabel 
-              control={<Checkbox checked={checkboxes[0]} onChange={() => handleCheckboxChange(0)} />} 
-              label="Most Important Q" 
+            <FormControlLabel
+              control={<Checkbox checked={checkboxes[0]} onChange={() => handleCheckboxChange(0)} />}
+              label="Most Important Q"
             />
-            <FormControlLabel 
-              control={<Checkbox checked={checkboxes[1]} onChange={() => handleCheckboxChange(1)} />} 
-              label="Summary" 
+            <FormControlLabel
+              control={<Checkbox checked={checkboxes[1]} onChange={() => handleCheckboxChange(1)} />}
+              label="Summary"
             />
-            <FormControlLabel 
-              control={<Checkbox checked={checkboxes[2]} onChange={() => handleCheckboxChange(2)} />} 
-              label="Notes" 
+            <FormControlLabel
+              control={<Checkbox checked={checkboxes[2]} onChange={() => handleCheckboxChange(2)} />}
+              label="Notes"
             />
-            <FormControlLabel 
-              control={<Checkbox checked={checkboxes[3]} onChange={() => handleCheckboxChange(3)} />} 
-              label="Additional Info" 
+            <FormControlLabel
+              control={<Checkbox checked={checkboxes[3]} onChange={() => handleCheckboxChange(3)} />}
+              label="Additional Info"
             />
           </Paper>
         </AnimatedBox>
 
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={handleSubmit}
             disabled={loading}
           >
             {loading ? <CircularProgress size={24} /> : 'Submit'}
           </Button>
         </Box>
+
+        {error && (
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        )}
 
         {responseData && (
           <>
