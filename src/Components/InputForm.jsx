@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import  { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import {
   ThemeProvider,
   createTheme,
   CssBaseline,
+  AppBar,
+  Toolbar,
   Box,
   Typography,
   TextField,
@@ -18,13 +22,30 @@ import {
   ListItemText,
   Button,
   Paper,
-  CircularProgress
+  CircularProgress,
+  Avatar,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-// Define keyframes
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
 const fadeInUp = keyframes`
   from {
     opacity: 0;
@@ -36,7 +57,6 @@ const fadeInUp = keyframes`
   }
 `;
 
-// Define theme
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -101,6 +121,14 @@ const SummaryAI = () => {
   const [checkboxes, setCheckboxes] = useState([false, false, false, false]);
   const [responseData, setResponseData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0];
@@ -116,7 +144,6 @@ const SummaryAI = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      
       setResponseData(null);
       const formData = new FormData();
       if (file) {
@@ -139,14 +166,68 @@ const SummaryAI = () => {
     }
   };
 
+  const handleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      // Send request to backend to verify login
+      await axios.post('http://localhost:8000/login', {
+        uid: user.uid,
+        email: user.email
+      });
+    } catch (error) {
+      console.error('Error signing in:', error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Summary AI
+          </Typography>
+          {user ? (
+            <>
+              <Button color="inherit" sx={{ mx: 1 }}>New</Button>
+              <Button color="inherit" sx={{ mx: 1 }}>History</Button>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="subtitle1" sx={{ mr: 1 }}>
+                  Hi, {user.displayName}
+                </Typography>
+                <Avatar
+                  src={user.photoURL}
+                  alt={user.displayName}
+                  sx={{ mr: 1 }}
+                />
+                <Tooltip title="Sign Out">
+                  <IconButton color="inherit" onClick={handleSignOut}>
+                    <ArrowDropDownIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </>
+          ) : (
+            <Button
+              color="inherit"
+              onClick={handleSignIn}
+              startIcon={<AccountCircleIcon />}
+            >
+              Sign In
+            </Button>
+          )}
+        </Toolbar>
+      </AppBar>
       <Box sx={{ padding: 3, maxWidth: 800, margin: 'auto' }}>
-        <Typography variant="h3" gutterBottom align="center" sx={{ mb: 4 }}>
-          Summary AI
-        </Typography>
-        
         <AnimatedBox delay={0.1}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
