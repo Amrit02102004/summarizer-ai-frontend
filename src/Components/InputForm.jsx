@@ -160,7 +160,7 @@ const SummaryAI = () => {
       formData.append('prompt_text', promptText);
       formData.append('checkboxes', checkboxes.map(cb => cb ? '1' : '0').join(','));
 
-      const response = await fetch('http://127.0.0.1:8000/api/submit', {
+      const response = await fetch('https://summarizer-ai-backend-gray.vercel.app/api/submit', {
         method: 'POST',
         body: formData,
       });
@@ -187,7 +187,7 @@ const SummaryAI = () => {
       const idToken = await user.getIdToken();
       console.log(idToken);
 
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
+      const response = await fetch('https://summarizer-ai-backend-gray.vercel.app/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
