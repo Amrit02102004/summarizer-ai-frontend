@@ -102,6 +102,21 @@ const darkTheme = createTheme({
   },
 });
 
+// Function to convert Markdown-style text to JSX
+const formatText = (text) => {
+  return text.split('\n').map((line, index) => (
+    <span key={index}>
+      {line.split(/(\*\*.*?\*\*)/).map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+      })}
+      <br />
+    </span>
+  ));
+};
+
 // Animated box component
 const AnimatedBox = ({ children, delay }) => (
   <Box sx={{
@@ -116,6 +131,58 @@ const AnimatedBox = ({ children, delay }) => (
 AnimatedBox.propTypes = {
   children: PropTypes.node.isRequired,
   delay: PropTypes.number.isRequired,
+};
+
+// New components for Additional Info section
+const RelatedTopics = ({ topics }) => (
+  <Box>
+    <Typography variant="h6" sx={{ mt: 2 }}>Related Topics:</Typography>
+    <List>
+      {topics.map((topic, index) => (
+        <ListItem key={index}>
+          <ListItemText primary={topic} />
+        </ListItem>
+      ))}
+    </List>
+  </Box>
+);
+
+const Resources = ({ resources }) => (
+  <Box>
+    <Typography variant="h6" sx={{ mt: 2 }}>Resources:</Typography>
+    <List>
+      {resources.map((resource, index) => (
+        <ListItem key={index}>
+          <ListItemText primary={resource} />
+        </ListItem>
+      ))}
+    </List>
+  </Box>
+);
+
+const FurtherStudy = ({ topics }) => (
+  <Box>
+    <Typography variant="h6" sx={{ mt: 2 }}>Further Study:</Typography>
+    <List>
+      {topics.map((topic, index) => (
+        <ListItem key={index}>
+          <ListItemText primary={topic} />
+        </ListItem>
+      ))}
+    </List>
+  </Box>
+);
+
+RelatedTopics.propTypes = {
+  topics: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
+
+Resources.propTypes = {
+  resources: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
+
+FurtherStudy.propTypes = {
+  topics: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 // Main component
@@ -160,7 +227,7 @@ const SummaryAI = () => {
       formData.append('prompt_text', promptText);
       formData.append('checkboxes', checkboxes.map(cb => cb ? '1' : '0').join(','));
 
-      const response = await fetch('http://localhost:8000/api/summary/submit/', {
+      const response = await fetch('https://airesponse.onrender.com/ai/submit/', {
         method: 'POST',
         body: formData,
       });
@@ -168,10 +235,11 @@ const SummaryAI = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
 
       const data = await response.json();
-      setResponseData(data);
+      const response_id = data.response_id;
+      console.log(response_id);
+      setResponseData(data.content);
     } catch (error) {
       console.error('Error submitting data:', error);
       setError('Failed to submit data. Please try again.');
@@ -351,10 +419,11 @@ const SummaryAI = () => {
               {responseData.important_questions.map((q, index) => (
                 <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{q.question}</Typography>
+                    <Typography>{formatText(q.question)}</Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography>{q.answer}</Typography>
+                    <Typography variant="subtitle1">Topic: {q.topic}</Typography>
+                    <Typography>{formatText(q.answer)}</Typography>
                   </AccordionDetails>
                 </Accordion>
               ))}
@@ -365,7 +434,18 @@ const SummaryAI = () => {
                 <Typography variant="h5" gutterBottom>
                   Summary
                 </Typography>
-                <Typography>{responseData.summary}</Typography>
+                <Typography variant="h6">Main Idea:</Typography>
+                <Typography>{formatText(responseData.summary.main_idea)}</Typography>
+                <Typography variant="h6" sx={{ mt: 2 }}>Key Points:</Typography>
+                <List>
+                  {responseData.summary.key_points.map((point, index) => (
+                    <ListItem key={index}>
+                      <ListItemText primary={formatText(point)} />
+                    </ListItem>
+                  ))}
+                </List>
+                <Typography variant="h6" sx={{ mt: 2 }}>Conclusion:</Typography>
+                <Typography>{formatText(responseData.summary.conclusion)}</Typography>
               </Paper>
             </AnimatedBox>
 
@@ -375,23 +455,26 @@ const SummaryAI = () => {
                   Notes
                 </Typography>
                 <List>
-                  {responseData.notes.map((note, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={note} />
+                  {responseData.notes.map((note, index) => (<ListItem key={index}>
+                      <ListItemText primary={formatText(note)} />
                     </ListItem>
                   ))}
                 </List>
               </Paper>
             </AnimatedBox>
 
-            <AnimatedBox delay={0.6}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Additional Info
-                </Typography>
-                <Typography>{responseData.additional_info}</Typography>
-              </Paper>
-            </AnimatedBox>
+            {responseData.additional_info && (
+              <AnimatedBox delay={0.6}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Additional Info
+                  </Typography>
+                  <RelatedTopics topics={responseData.additional_info.related_topics} />
+                  <Resources resources={responseData.additional_info.resources} />
+                  <FurtherStudy topics={responseData.additional_info.further_study} />
+                </Paper>
+              </AnimatedBox>
+            )}
           </>
         )}
       </Box>
