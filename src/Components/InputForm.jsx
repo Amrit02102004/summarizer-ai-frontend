@@ -188,17 +188,27 @@ FurtherStudy.propTypes = {
 // Main component
 const SummaryAI = () => {
   const [file, setFile] = useState(null);
-  const [websiteLink, setWebsiteLink] = useState('');
   const [promptText, setPromptText] = useState('');
   const [checkboxes, setCheckboxes] = useState([false, false, false, false]);
   const [responseData, setResponseData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
+  const [uid, setUid] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
+      if (user) {
+        const userUid = user.uid;
+        setUid(userUid);
+        localStorage.setItem('uid', userUid);
+        document.cookie = `uid=${userUid}; path=/; max-age=3600`;
+      } else {
+        setUid(null);
+        localStorage.removeItem('uid');
+        document.cookie = 'uid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -223,7 +233,6 @@ const SummaryAI = () => {
       if (file) {
         formData.append('file', file);
       }
-      formData.append('website_link', websiteLink);
       formData.append('prompt_text', promptText);
       formData.append('checkboxes', checkboxes.map(cb => cb ? '1' : '0').join(','));
 
@@ -238,8 +247,22 @@ const SummaryAI = () => {
 
       const data = await response.json();
       const response_id = data.response_id;
-      console.log(response_id);
       setResponseData(data.content);
+
+      // Send request to history endpoint if user is logged in
+      if (uid) {
+        await fetch('https://summarizer-ai-backend.vercel.app/history/set/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: uid,
+            promptText: promptText,
+            response_id: response_id
+          }),
+        });
+      }
     } catch (error) {
       console.error('Error submitting data:', error);
       setError('Failed to submit data. Please try again.');
@@ -333,6 +356,15 @@ const SummaryAI = () => {
       <Box sx={{ padding: 3, maxWidth: 800, margin: 'auto' }}>
         <AnimatedBox delay={0.1}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography variant="body1" gutterBottom>
+  Welcome to Summary AI, your advanced document analysis tool. <br></br>
+  To begin, please upload your PDF document and provide a specific prompt related to the content. Select the desired output options using the checkboxes below to customize your results.
+  {!user && (
+    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+      Sign in to access your response history and manage your previous analyses.<br></br>
+    </Typography>
+  )}
+</Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Button
                 variant="contained"
@@ -354,14 +386,7 @@ const SummaryAI = () => {
                 </Typography>
               )}
             </Box>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Or enter website link"
-              sx={{ mb: 2 }}
-              value={websiteLink}
-              onChange={(e) => setWebsiteLink(e.target.value)}
-            />
+            
             <TextField
               fullWidth
               variant="outlined"
@@ -455,7 +480,8 @@ const SummaryAI = () => {
                   Notes
                 </Typography>
                 <List>
-                  {responseData.notes.map((note, index) => (<ListItem key={index}>
+                  {responseData.notes.map((note, index) => (
+                    <ListItem key={index}>
                       <ListItemText primary={formatText(note)} />
                     </ListItem>
                   ))}
