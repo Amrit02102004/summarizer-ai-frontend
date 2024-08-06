@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { initializeApp } from 'firebase/app';
 import PropTypes from 'prop-types';
@@ -267,6 +267,10 @@ const SummaryAI = ({ resetForm, setResetForm }) => {
       }
 
       const data = await response.json();
+      if (!data.content || Object.keys(data.content).length === 0) {
+        setError('Something went wrong. If the PDF word length is too long, it might not respond. Please try again.');
+        return;
+      }
       const response_id = data.response_id;
       setResponseData(data.content);
 
@@ -436,7 +440,7 @@ const SummaryAI = ({ resetForm, setResetForm }) => {
                 </Typography>
               )}
             </Box>
-            
+
             <TextField
               fullWidth
               variant="outlined"
