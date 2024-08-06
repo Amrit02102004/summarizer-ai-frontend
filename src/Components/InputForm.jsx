@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { initializeApp } from 'firebase/app';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import GitHubIcon from '@mui/icons-material/GitHub';
+import LanguageIcon from '@mui/icons-material/Language';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import PropTypes from 'prop-types';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import {
@@ -23,6 +27,7 @@ import {
   Avatar,
   Tooltip,
   IconButton,
+  Container,
   Menu,
   MenuItem,
   useMediaQuery,
@@ -105,7 +110,6 @@ const darkTheme = createTheme({
   },
 });
 
-// Function to convert Markdown-style text to JSX
 const formatText = (text) => {
   return text.split('\n').map((line, index) => (
     <span key={index}>
@@ -130,7 +134,52 @@ const AnimatedBox = ({ children, delay }) => (
     {children}
   </Box>
 );
-
+const Footer = () => (
+  <Box
+    component="footer"
+    sx={{
+      py: 3,
+      px: 2,
+      mt: 'auto',
+      backgroundColor: (theme) =>
+        theme.palette.mode === 'light'
+          ? theme.palette.grey[200]
+          : theme.palette.grey[800],
+    }}
+  >
+    <Container maxWidth="sm">
+      <Typography variant="body1" align="center">
+        Developed with <FavoriteIcon sx={{ color: 'red', verticalAlign: 'middle' }} /> by Amrit Sundarka
+      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+        <IconButton
+          color="inherit"
+          href="https://www.linkedin.com/in/amrit-sundarka"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <LinkedInIcon />
+        </IconButton>
+        <IconButton
+          color="inherit"
+          href="https://github.com/Amrit02102004"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <GitHubIcon />
+        </IconButton>
+        <IconButton
+          color="inherit"
+          href="https://amritsundarka.co"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <LanguageIcon />
+        </IconButton>
+      </Box>
+    </Container>
+  </Box>
+);
 AnimatedBox.propTypes = {
   children: PropTypes.node.isRequired,
   delay: PropTypes.number.isRequired,
@@ -569,6 +618,7 @@ const SummaryAI = ({ resetForm, setResetForm }) => {
             )}
           </>
         )}
+        <Footer/>
       </Box>
     </ThemeProvider>
   );
