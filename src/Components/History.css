@@ -1,11 +1,13 @@
 /* History.css */
 .history-container {
   max-width: 800px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
 
 .history-item {
+  width: 100%;
   margin-bottom: 20px;
   transition: background-color 0.3s ease;
 }
@@ -15,6 +17,7 @@
 }
 
 .history-item .MuiListItem-root {
+  width: 100%;
   padding: 16px;
   cursor: pointer;
 }
@@ -49,6 +52,14 @@
 
 .MuiAccordionDetails-root {
   padding: 16px;
+}
+
+.MuiList-root {
+  width: 100%;
+}
+
+.MuiPaper-root {
+  width: 100%;
 }
 
 @media (max-width: 600px) {

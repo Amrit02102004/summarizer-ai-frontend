@@ -136,6 +136,13 @@ const History = ({ onNewClick }) => {
     ));
   };
 
+  const hasAdditionalInfo = (additionalInfo) => {
+    if (!additionalInfo || typeof additionalInfo !== 'object') return false;
+    return Object.keys(additionalInfo).some(key => 
+      Array.isArray(additionalInfo[key]) && additionalInfo[key].length > 0
+    );
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
@@ -182,17 +189,17 @@ const History = ({ onNewClick }) => {
           )}
         </Toolbar>
       </AppBar>
-      <Box sx={{ padding: 3, maxWidth: '800px', margin: 'auto' }} className="history-container">
+      <Box sx={{ padding: 3, maxWidth: '800px', width: '100%', margin: 'auto' }} className="history-container">
         <Typography variant="h4" gutterBottom>Your History</Typography>
         {loading ? (
           <CircularProgress />
         ) : (
-          <List>
+          <List sx={{ width: '100%' }}>
             {history.map((item, index) => (
-              <Paper key={index} elevation={3} sx={{ mb: 2 }} className="history-item">
+              <Paper key={index} elevation={3} sx={{ mb: 2, width: '100%' }} className="history-item">
                 <ListItem
                   alignItems="flex-start"
-                  sx={{ display: 'flex', justifyContent: 'space-between' }}
+                  sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
                   onClick={() => handleOpenResponse(item.response_id)}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', flexGrow: 1 }}>
@@ -274,7 +281,7 @@ const History = ({ onNewClick }) => {
                 </AccordionDetails>
               </Accordion>
             )}
-            {selectedResponse.additional_info && (
+            {hasAdditionalInfo(selectedResponse.additional_info) && (
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography>Additional Info</Typography>
