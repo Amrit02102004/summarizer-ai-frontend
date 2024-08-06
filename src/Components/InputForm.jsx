@@ -487,57 +487,63 @@ const SummaryAI = ({ resetForm, setResetForm }) => {
 
         {responseData && (
           <>
-            <AnimatedBox delay={0.3}>
-              <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                Most Important Questions
-              </Typography>
-              {responseData.important_questions.map((q, index) => (
-                <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography>{formatText(q.question)}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography variant="subtitle1">Topic: {q.topic}</Typography>
-                    <Typography>{formatText(q.answer)}</Typography>
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-            </AnimatedBox>
-
-            <AnimatedBox delay={0.4}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Summary
+            {responseData.important_questions && (
+              <AnimatedBox delay={0.3}>
+                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                  Most Important Questions
                 </Typography>
-                <Typography variant="h6">Main Idea:</Typography>
-                <Typography>{formatText(responseData.summary.main_idea)}</Typography>
-                <Typography variant="h6" sx={{ mt: 2 }}>Key Points:</Typography>
-                <List>
-                  {responseData.summary.key_points.map((point, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={formatText(point)} />
-                    </ListItem>
-                  ))}
-                </List>
-                <Typography variant="h6" sx={{ mt: 2 }}>Conclusion:</Typography>
-                <Typography>{formatText(responseData.summary.conclusion)}</Typography>
-              </Paper>
-            </AnimatedBox>
+                {responseData.important_questions.map((q, index) => (
+                  <Accordion key={index} sx={{ mb: 2, backgroundColor: 'background.paper' }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>{formatText(q.question)}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography variant="subtitle1">Topic: {q.topic}</Typography>
+                      <Typography>{formatText(q.answer)}</Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+              </AnimatedBox>
+            )}
 
-            <AnimatedBox delay={0.5}>
-              <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-                <Typography variant="h5" gutterBottom>
-                  Notes
-                </Typography>
-                <List>
-                  {responseData.notes.map((note, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={formatText(note)} />
-                    </ListItem>
-                  ))}
-                </List>
-              </Paper>
-            </AnimatedBox>
+            {responseData.summary && (
+              <AnimatedBox delay={0.4}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Summary
+                  </Typography>
+                  <Typography variant="h6">Main Idea:</Typography>
+                  <Typography>{formatText(responseData.summary.main_idea)}</Typography>
+                  <Typography variant="h6" sx={{ mt: 2 }}>Key Points:</Typography>
+                  <List>
+                    {responseData.summary.key_points.map((point, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={formatText(point)} />
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Typography variant="h6" sx={{ mt: 2 }}>Conclusion:</Typography>
+                  <Typography>{formatText(responseData.summary.conclusion)}</Typography>
+                </Paper>
+              </AnimatedBox>
+            )}
+
+            {responseData.notes && (
+              <AnimatedBox delay={0.5}>
+                <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Notes
+                  </Typography>
+                  <List>
+                    {responseData.notes.map((note, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={formatText(note)} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Paper>
+              </AnimatedBox>
+            )}
 
             {responseData.additional_info && (
               <AnimatedBox delay={0.6}>
@@ -545,9 +551,15 @@ const SummaryAI = ({ resetForm, setResetForm }) => {
                   <Typography variant="h5" gutterBottom>
                     Additional Info
                   </Typography>
-                  <RelatedTopics topics={responseData.additional_info.related_topics} />
-                  <Resources resources={responseData.additional_info.resources} />
-                  <FurtherStudy topics={responseData.additional_info.further_study} />
+                  {responseData.additional_info.related_topics && (
+                    <RelatedTopics topics={responseData.additional_info.related_topics} />
+                  )}
+                  {responseData.additional_info.resources && (
+                    <Resources resources={responseData.additional_info.resources} />
+                  )}
+                  {responseData.additional_info.further_study && (
+                    <FurtherStudy topics={responseData.additional_info.further_study} />
+                  )}
                 </Paper>
               </AnimatedBox>
             )}
