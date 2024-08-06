@@ -1,10 +1,43 @@
 /* App.css */
 .App {
-  text-align: center;
+  text-align: left;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.MuiAppBar-root {
+  background-color: #1e1e1e !important;
+}
+
+.MuiToolbar-root {
+  justify-content: space-between;
+}
+
+.MuiTypography-h6 {
+  flex-grow: 1;
+  text-align: left !important;
 }
 
 @media (max-width: 600px) {
-  .App {
-    padding: 10px;
+  .MuiToolbar-root {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .MuiTypography-h6 {
+    font-size: 1.25rem;
+  }
+
+  .MuiButton-root {
+    padding: 6px 12px;
+  }
+}
+
+/* Ensure content is centered on larger screens */
+@media (min-width: 801px) {
+  .App > div {
+    max-width: 800px;
+    margin: 0 auto;
   }
 }

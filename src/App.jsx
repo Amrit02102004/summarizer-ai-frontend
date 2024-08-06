@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import SummaryAI from './Components/InputForm';
 import History from './Components/history';
@@ -17,16 +18,22 @@ ProtectedRoute.propTypes = {
 };
 
 const App = () => {
+  const [resetForm, setResetForm] = useState(false);
+
+  const handleResetForm = () => {
+    setResetForm(true);
+  };
+
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<SummaryAI />} />
+          <Route path="/" element={<SummaryAI resetForm={resetForm} setResetForm={setResetForm} />} />
           <Route 
             path="/history" 
             element={
               <ProtectedRoute>
-                <History />
+                <History onNewClick={handleResetForm} />
               </ProtectedRoute>
             } 
           />

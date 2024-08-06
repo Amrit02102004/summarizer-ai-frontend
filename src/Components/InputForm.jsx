@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import  { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { initializeApp } from 'firebase/app';
+import PropTypes from 'prop-types';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import {
   ThemeProvider,
@@ -13,9 +14,6 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   List,
   ListItem,
   ListItemText,
@@ -25,12 +23,17 @@ import {
   Avatar,
   Tooltip,
   IconButton,
+  Menu,
+  MenuItem,
+  useMediaQuery,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -186,7 +189,7 @@ FurtherStudy.propTypes = {
 };
 
 // Main component
-const SummaryAI = () => {
+const SummaryAI = ({ resetForm, setResetForm }) => {
   const [file, setFile] = useState(null);
   const [promptText, setPromptText] = useState('');
   const [checkboxes, setCheckboxes] = useState([false, false, false, false]);
@@ -195,6 +198,9 @@ const SummaryAI = () => {
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
   const [uid, setUid] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -212,6 +218,21 @@ const SummaryAI = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (resetForm) {
+      handleReset();
+      setResetForm(false);
+    }
+  }, [resetForm, setResetForm]);
+
+  const handleReset = () => {
+    setFile(null);
+    setPromptText('');
+    setCheckboxes([false, false, false, false]);
+    setResponseData(null);
+    setError(null);
+  };
 
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0];
@@ -309,9 +330,23 @@ const SummaryAI = () => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      handleMenuClose();
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleHistoryClick = () => {
+    navigate('/history');
+    handleMenuClose();
   };
 
   return (
@@ -319,27 +354,42 @@ const SummaryAI = () => {
       <CssBaseline />
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'left' }}>
             Summary AI
           </Typography>
           {user ? (
             <>
-              <Button color="inherit" sx={{ mx: 1 }}>New</Button>
-              <Button color="inherit" sx={{ mx: 1 }}>History</Button>
+              {!isMobile && (
+                <>
+                  <Button color="inherit" onClick={handleReset} sx={{ mx: 1 }}>New</Button>
+                  <Button color="inherit" onClick={handleHistoryClick} sx={{ mx: 1 }}>History</Button>
+                </>
+              )}
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="subtitle1" sx={{ mr: 1 }}>
+                <Typography variant="subtitle1" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
                   Hi, {user.displayName}
                 </Typography>
-                <Avatar
-                  src={user.photoURL}
-                  alt={user.displayName}
-                  sx={{ mr: 1 }}
-                />
-                <Tooltip title="Sign Out">
-                  <IconButton color="inherit" onClick={handleSignOut}>
-                    <ArrowDropDownIcon />
+                <Tooltip title={isMobile ? "Menu" : "Account"}>
+                  <IconButton color="inherit" onClick={handleMenuOpen}>
+                    <Avatar
+                      src={user.photoURL}
+                      alt={user.displayName}
+                    />
                   </IconButton>
                 </Tooltip>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  {isMobile && (
+                    <>
+                      <MenuItem onClick={handleReset}>New</MenuItem>
+                      <MenuItem onClick={handleHistoryClick}>History</MenuItem>
+                    </>
+                  )}
+                  <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+                </Menu>
               </Box>
             </>
           ) : (
@@ -356,15 +406,15 @@ const SummaryAI = () => {
       <Box sx={{ padding: 3, maxWidth: 800, margin: 'auto' }}>
         <AnimatedBox delay={0.1}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="body1" gutterBottom>
-  Welcome to Summary AI, your advanced document analysis tool. <br></br>
-  To begin, please upload your PDF document and provide a specific prompt related to the content. Select the desired output options using the checkboxes below to customize your results.
-  {!user && (
-    <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
-      Sign in to access your response history and manage your previous analyses.<br></br>
-    </Typography>
-  )}
-</Typography>
+            <Typography variant="body1" gutterBottom>
+              Welcome to Summary AI, your advanced document analysis tool.
+              To begin, please upload your PDF document and provide a specific prompt related to the content. Select the desired output options using the checkboxes below to customize your results.
+              {!user && (
+                <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                  Sign in to access your response history and manage your previous analyses.
+                </Typography>
+              )}
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Button
                 variant="contained"
@@ -506,6 +556,11 @@ const SummaryAI = () => {
       </Box>
     </ThemeProvider>
   );
+};
+
+SummaryAI.propTypes = {
+  resetForm: PropTypes.bool.isRequired,
+  setResetForm: PropTypes.func.isRequired,
 };
 
 export default SummaryAI;

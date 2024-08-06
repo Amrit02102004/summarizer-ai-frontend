@@ -1,4 +1,5 @@
-// Components/History.jsx
+
+import PropTypes from 'prop-types';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
@@ -19,10 +20,12 @@ import {
   ListItemText,
   Paper,
   CircularProgress,
+  Menu,
+  MenuItem,
+  useMediaQuery,
 } from '@mui/material';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+// import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import './History.css';
-
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -35,13 +38,14 @@ const darkTheme = createTheme({
     },
   },
 });
-
-const History = () => {
+const History = ({ onNewClick }) => {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth();
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -70,7 +74,6 @@ const History = () => {
       setLoading(false);
     }
   };
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -85,32 +88,62 @@ const History = () => {
     navigate(`/response/${responseId}`);
   };
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNewClick = () => {
+    onNewClick();
+    navigate('/');
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'left' }}>
             Summary AI
           </Typography>
-          <Button color="inherit" onClick={() => navigate('/')} sx={{ mx: 1 }}>New</Button>
-          <Button color="inherit" sx={{ mx: 1 }}>History</Button>
           {user && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="subtitle1" sx={{ mr: 1 }}>
-                Hi, {user.displayName}
-              </Typography>
-              <Avatar
-                src={user.photoURL}
-                alt={user.displayName}
-                sx={{ mr: 1 }}
-              />
-              <Tooltip title="Sign Out">
-                <IconButton color="inherit" onClick={handleSignOut}>
-                  <ArrowDropDownIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
+            <>
+              {!isMobile && (
+                <>
+                  <Button color="inherit" onClick={handleNewClick} sx={{ mx: 1 }}>New</Button>
+                  <Button color="inherit" sx={{ mx: 1 }}>History</Button>
+                </>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="subtitle1" sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}>
+                  Hi, {user.displayName}
+                </Typography>
+                <Tooltip title={isMobile ? "Menu" : "Account"}>
+                  <IconButton color="inherit" onClick={handleMenuOpen}>
+                    <Avatar
+                      src={user.photoURL}
+                      alt={user.displayName}
+                    />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  {isMobile && (
+                    <>
+                    <MenuItem onClick={handleNewClick}>New</MenuItem>
+                      <MenuItem onClick={handleMenuClose}>History</MenuItem>
+                    </>
+                  )}
+                  <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+                </Menu>
+              </Box>
+            </>
           )}
         </Toolbar>
       </AppBar>
@@ -151,5 +184,7 @@ const History = () => {
     </ThemeProvider>
   );
 };
-
+History.propTypes = {
+  onNewClick: PropTypes.func.isRequired,
+};
 export default History;
