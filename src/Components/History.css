@@ -1,12 +1,54 @@
 /* History.css */
 .history-container {
-  max-width: 800px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
 
 .history-item {
   margin-bottom: 15px;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.history-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.history-item .MuiListItem-root {
+  padding: 16px;
+  cursor: pointer;
+}
+
+.history-item .MuiListItemText-primary {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.history-item .MuiListItemText-secondary {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.history-item .MuiIconButton-root {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+
+.history-item .MuiIconButton-root:hover {
+  color: #80cbc4;
+}
+
+.MuiAccordion-root {
+  background-color: #1e1e1e;
+  margin-bottom: 16px;
+}
+
+.MuiAccordionSummary-root {
+  background-color: #2c2c2c;
+}
+
+.MuiAccordionDetails-root {
+  padding: 16px;
 }
 
 @media (max-width: 600px) {
@@ -16,5 +58,13 @@
 
   .history-item {
     margin-bottom: 10px;
+  }
+
+  .history-item .MuiListItem-root {
+    padding: 12px;
+  }
+
+  .history-item .MuiListItemText-primary {
+    font-size: 1rem;
   }
 }
