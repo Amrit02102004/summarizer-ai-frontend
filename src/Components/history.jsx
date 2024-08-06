@@ -146,7 +146,7 @@ const History = ({ onNewClick }) => {
 
   const hasAdditionalInfo = (additionalInfo) => {
     if (!additionalInfo || typeof additionalInfo !== 'object') return false;
-    return Object.keys(additionalInfo).some(key => 
+    return Object.keys(additionalInfo).some(key =>
       Array.isArray(additionalInfo[key]) && additionalInfo[key].length > 0
     );
   };
@@ -208,20 +208,20 @@ const History = ({ onNewClick }) => {
                 {history.map((item, index) => (
                   <Paper key={index} elevation={3} sx={{ mb: 2, width: '100%' }} className="history-item">
                     <ListItem
-                      alignItems="flex-start"
-                      sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                      alignItems="center"
+                      sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '8px 16px' }}
                       onClick={() => handleOpenResponse(item.response_id)}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', flexGrow: 1 }}>
-                        <Typography variant="body2" sx={{ minWidth: 30, mr: 2, mt: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                        <Typography variant="body2" sx={{ minWidth: 30, mr: 2 }}>
                           {index + 1}.
                         </Typography>
-                        <ListItemText
-                          primary={item.prompt_text}
-                          secondary={formatDate(item.created_at)}
-                          primaryTypographyProps={{ variant: 'h6' }}
-                          secondaryTypographyProps={{ variant: 'body2' }}
-                        />
+                        <Typography noWrap sx={{ flexGrow: 1, mr: 2 }}>
+                          {item.prompt_text.slice(0, 20)}...
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {formatDate(item.created_at)}
+                        </Typography>
                       </Box>
                       <IconButton edge="end" aria-label="open response">
                         <ArrowForwardIosIcon />
