@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
 import {
@@ -182,7 +182,7 @@ const History = ({ onNewClick }) => {
           )}
         </Toolbar>
       </AppBar>
-      <Box sx={{ padding: 3, maxWidth: '100%', margin: 'auto' }} className="history-container">
+      <Box sx={{ padding: 3, maxWidth: '800px', margin: 'auto' }} className="history-container">
         <Typography variant="h4" gutterBottom>Your History</Typography>
         {loading ? (
           <CircularProgress />
@@ -191,17 +191,19 @@ const History = ({ onNewClick }) => {
             {history.map((item, index) => (
               <Paper key={index} elevation={3} sx={{ mb: 2 }} className="history-item">
                 <ListItem
-                  alignItems="center"
+                  alignItems="flex-start"
                   sx={{ display: 'flex', justifyContent: 'space-between' }}
                   onClick={() => handleOpenResponse(item.response_id)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                    <Typography variant="body2" sx={{ minWidth: 30, mr: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', flexGrow: 1 }}>
+                    <Typography variant="body2" sx={{ minWidth: 30, mr: 2, mt: 0.5 }}>
                       {index + 1}.
                     </Typography>
                     <ListItemText
                       primary={item.prompt_text}
                       secondary={formatDate(item.created_at)}
+                      primaryTypographyProps={{ variant: 'h6' }}
+                      secondaryTypographyProps={{ variant: 'body2' }}
                     />
                   </Box>
                   <IconButton edge="end" aria-label="open response">
@@ -215,83 +217,105 @@ const History = ({ onNewClick }) => {
         {selectedResponse && (
           <Box sx={{ mt: 4 }}>
             <Typography variant="h5" gutterBottom>Selected Response</Typography>
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Most Important Questions</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {selectedResponse.important_questions.map((q, index) => (
-                  <Box key={index} sx={{ mb: 2 }}>
-                    <Typography variant="h6">{formatText(q.question)}</Typography>
-                    <Typography variant="subtitle1">Topic: {q.topic}</Typography>
-                    <Typography>{formatText(q.answer)}</Typography>
-                  </Box>
-                ))}
-              </AccordionDetails>
-            </Accordion>
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Summary</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography variant="h6">Main Idea:</Typography>
-                <Typography>{formatText(selectedResponse.summary.main_idea)}</Typography>
-                <Typography variant="h6" sx={{ mt: 2 }}>Key Points:</Typography>
-                <List>
-                  {selectedResponse.summary.key_points.map((point, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={formatText(point)} />
-                    </ListItem>
+            {selectedResponse.important_questions && selectedResponse.important_questions.length > 0 && (
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Most Important Questions</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {selectedResponse.important_questions.map((q, index) => (
+                    <Box key={index} sx={{ mb: 2 }}>
+                      <Typography variant="h6">{formatText(q.question)}</Typography>
+                      <Typography variant="subtitle1">Topic: {q.topic}</Typography>
+                      <Typography>{formatText(q.answer)}</Typography>
+                    </Box>
                   ))}
-                </List>
-                <Typography variant="h6" sx={{ mt: 2 }}>Conclusion:</Typography>
-                <Typography>{formatText(selectedResponse.summary.conclusion)}</Typography>
-              </AccordionDetails>
-            </Accordion>
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Notes</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <List>
-                  {selectedResponse.notes.map((note, index) => (
-                    <ListItem key={index}>
-                      <ListItemText primary={formatText(note)} />
-                    </ListItem>
-                  ))}
-                </List>
-              </AccordionDetails>
-            </Accordion>
+                </AccordionDetails>
+              </Accordion>
+            )}
+            {selectedResponse.summary && (
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Summary</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="h6">Main Idea:</Typography>
+                  <Typography>{formatText(selectedResponse.summary.main_idea)}</Typography>
+                  {selectedResponse.summary.key_points && selectedResponse.summary.key_points.length > 0 && (
+                    <>
+                      <Typography variant="h6" sx={{ mt: 2 }}>Key Points:</Typography>
+                      <List>
+                        {selectedResponse.summary.key_points.map((point, index) => (
+                          <ListItem key={index}>
+                            <ListItemText primary={formatText(point)} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                  <Typography variant="h6" sx={{ mt: 2 }}>Conclusion:</Typography>
+                  <Typography>{formatText(selectedResponse.summary.conclusion)}</Typography>
+                </AccordionDetails>
+              </Accordion>
+            )}
+            {selectedResponse.notes && selectedResponse.notes.length > 0 && (
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography>Notes</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <List>
+                    {selectedResponse.notes.map((note, index) => (
+                      <ListItem key={index}>
+                        <ListItemText primary={formatText(note)} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
+            )}
             {selectedResponse.additional_info && (
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography>Additional Info</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Typography variant="h6">Related Topics:</Typography>
-                  <List>
-                    {selectedResponse.additional_info.related_topics.map((topic, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={topic} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Typography variant="h6">Resources:</Typography>
-                  <List>
-                    {selectedResponse.additional_info.resources.map((resource, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={resource} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <Typography variant="h6">Further Study:</Typography>
-                  <List>
-                    {selectedResponse.additional_info.further_study.map((topic, index) => (
-                      <ListItem key={index}>
-                        <ListItemText primary={topic} />
-                      </ListItem>
-                    ))}
-                  </List>
+                  {selectedResponse.additional_info.related_topics && selectedResponse.additional_info.related_topics.length > 0 && (
+                    <>
+                      <Typography variant="h6">Related Topics:</Typography>
+                      <List>
+                        {selectedResponse.additional_info.related_topics.map((topic, index) => (
+                          <ListItem key={index}>
+                            <ListItemText primary={topic} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                  {selectedResponse.additional_info.resources && selectedResponse.additional_info.resources.length > 0 && (
+                    <>
+                      <Typography variant="h6">Resources:</Typography>
+                      <List>
+                        {selectedResponse.additional_info.resources.map((resource, index) => (
+                          <ListItem key={index}>
+                            <ListItemText primary={resource} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                  {selectedResponse.additional_info.further_study && selectedResponse.additional_info.further_study.length > 0 && (
+                    <>
+                      <Typography variant="h6">Further Study:</Typography>
+                      <List>
+                        {selectedResponse.additional_info.further_study.map((topic, index) => (
+                          <ListItem key={index}>
+                            <ListItemText primary={topic} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
                 </AccordionDetails>
               </Accordion>
             )}

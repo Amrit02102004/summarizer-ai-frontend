@@ -1,14 +1,13 @@
 /* History.css */
 .history-container {
-  max-width: 100%;
+  max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .history-item {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   transition: background-color 0.3s ease;
-  width: 100%;
 }
 
 .history-item:hover {
@@ -22,7 +21,8 @@
 
 .history-item .MuiListItemText-primary {
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
 }
 
 .history-item .MuiListItemText-secondary {
@@ -57,7 +57,7 @@
   }
 
   .history-item {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
   }
 
   .history-item .MuiListItem-root {
@@ -65,6 +65,6 @@
   }
 
   .history-item .MuiListItemText-primary {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 }
